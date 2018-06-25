@@ -97,7 +97,7 @@ def main():
                         action="store_true", help="Backup the hosts "
                                                   "files before they "
                                                   "are overridden.")
-    parser.add_argument("--extensions", "-e", dest="extensions", default=[],
+    parser.add_argument("--extensions", "-e", dest="extensions", default=["fakenews", "gambling", "porn"],
                         nargs="*", help="Host extensions to include "
                                         "in the final hosts file.")
     parser.add_argument("--ip", "-i", dest="targetip", default="0.0.0.0",
@@ -614,7 +614,7 @@ def update_all_sources(source_data_filename, host_filename):
             hosts_file = open(path_join_robust(BASEDIR_PATH,
                                                os.path.dirname(source),
                                                host_filename), "wb")
-            write_data(hosts_file, updated_file)
+            write_data(hosts_file, str(updated_file))
             hosts_file.close()
         except Exception:
             print("Error in updating source: ", update_url)
@@ -637,7 +637,7 @@ def create_initial_file():
         end = "# End {}\n".format(os.path.basename(os.path.dirname(source)))
 
         with open(source, "r") as curFile:
-            write_data(merge_file, start + curFile.read() + end)
+            write_data(merge_file, str(start) + str(curFile.read()) + str(end))
 
     # spin the sources for extensions to the base file
     for source in settings["extensions"]:
@@ -921,14 +921,13 @@ def write_opening_header(final_file, **header_params):
     file_contents = final_file.read()  # Save content.
 
     final_file.seek(0)  # Write at the top.
-    write_data(final_file, "# This hosts file is a merged collection "
-                           "of hosts from reputable sources,\n")
+    write_data(final_file, str("# This hosts file is a merged collection of hosts from reputable sources,\n"))
+    """
     write_data(final_file, "# with a dash of crowd sourcing via Github\n#\n")
     write_data(final_file, "# Date: " + time.strftime("%B %d %Y", time.gmtime()) + "\n")
 
     if header_params["extensions"]:
-        write_data(final_file, "# Extensions added to this file: " + ", ".join(
-            header_params["extensions"]) + "\n")
+        write_data(final_file, "# Extensions added to this file: " + ", ".join(header_params["extensions"]) + "\n")
 
     write_data(final_file, ("# Number of unique domains: {:,}\n#\n".format(header_params["numberofrules"])))
     write_data(final_file, "# Fetch the latest version of this file: "
@@ -938,7 +937,7 @@ def write_opening_header(final_file, **header_params):
     write_data(final_file, "# Project releases: https://github.com/StevenBlack/hosts/releases\n#\n")
     write_data(final_file, "# ===============================================================\n")
     write_data(final_file, "\n")
-
+    """
     if not header_params["skipstatichosts"]:
         write_data(final_file, "127.0.0.1 localhost\n")
         write_data(final_file, "127.0.0.1 localhost.localdomain\n")
@@ -1259,6 +1258,9 @@ def write_data(f, data):
     data : str
         The data to write to the file.
     """
+
+    if len(data) < 2:
+        return None
 
     if PY3:
         f.write(bytes(data, "UTF-8"))
