@@ -56,7 +56,6 @@ def get_defaults():
     default_settings : dict
         A dictionary of the default settings when updating host information.
     """
-
     return {
         "numberofrules": 0,
         "datapath": path_join_robust(BASEDIR_PATH, "data"),
@@ -88,53 +87,30 @@ def get_defaults():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Creates a unified hosts "
-                                                 "file from hosts stored in "
-                                                 "data subfolders.")
-    parser.add_argument("--auto", "-a", dest="auto", default=False,
-                        action="store_true", help="Run without prompting.")
+    parser = argparse.ArgumentParser(description="Creates a unified hosts file from hosts stored in data subfolders.")
+    parser.add_argument("--auto", "-a", dest="auto", default=False, action="store_true", help="Run without prompting.")
     parser.add_argument("--backup", "-b", dest="backup", default=False,
-                        action="store_true", help="Backup the hosts "
-                                                  "files before they "
-                                                  "are overridden.")
+                        action="store_true", help="Backup the hosts files before they are overridden.")
     parser.add_argument("--extensions", "-e", dest="extensions", default=["fakenews", "gambling", "porn"],
-                        nargs="*", help="Host extensions to include "
-                                        "in the final hosts file.")
-    parser.add_argument("--ip", "-i", dest="targetip", default="0.0.0.0",
-                        help="Target IP address. Default is 0.0.0.0.")
-    parser.add_argument("--keepdomaincomments", "-k",
-                        dest="keepdomaincomments", default=False,
+                        nargs="*", help="Host extensions to include in the final hosts file.")
+    parser.add_argument("--ip", "-i", dest="targetip", default="0.0.0.0", help="Target IP address. Default is 0.0.0.0.")
+    parser.add_argument("--keepdomaincomments", "-k", dest="keepdomaincomments", default=False,
                         help="Keep domain line comments.")
-    parser.add_argument("--noupdate", "-n", dest="noupdate", default=False,
-                        action="store_true", help="Don't update from "
-                                                  "host data sources.")
-    parser.add_argument("--skipstatichosts", "-s", dest="skipstatichosts",
-                        default=False, action="store_true",
-                        help="Skip static localhost entries "
-                             "in the final hosts file.")
+    parser.add_argument("--noupdate", "-n", dest="noupdate", default=False, action="store_true",
+                        help="Don't update from host data sources.")
+    parser.add_argument("--skipstatichosts", "-s", dest="skipstatichosts", default=False, action="store_true",
+                        help="Skip static localhost entries in the final hosts file.")
     parser.add_argument("--output", "-o", dest="outputsubfolder", default="",
                         help="Output subfolder for generated hosts file.")
-    parser.add_argument("--replace", "-r", dest="replace", default=False,
-                        action="store_true", help="Replace your active "
-                                                  "hosts file with this "
-                                                  "new hosts file.")
-    parser.add_argument("--flush-dns-cache", "-f", dest="flushdnscache",
-                        default=False, action="store_true",
-                        help="Attempt to flush DNS cache "
-                             "after replacing the hosts file.")
-    parser.add_argument("--compress", "-c", dest="compress",
-                        default=False, action="store_true",
-                        help="Compress the hosts file "
-                             "ignoring non-necessary lines "
-                             "(empty lines and comments) and "
-                             "putting multiple domains in "
-                             "each line. Improve the "
-                             "performances under Windows.")
-    parser.add_argument("--minimise", "-m", dest="minimise",
-                        default=False, action="store_true",
-                        help="Minimise the hosts file "
-                             "ignoring non-necessary lines "
-                             "(empty lines and comments).")
+    parser.add_argument("--replace", "-r", dest="replace", default=False, action="store_true",
+                        help="Replace your active hosts file with this new hosts file.")
+    parser.add_argument("--flush-dns-cache", "-f", dest="flushdnscache", default=False, action="store_true",
+                        help="Attempt to flush DNS cache after replacing the hosts file.")
+    parser.add_argument("--compress", "-c", dest="compress", default=False, action="store_true",
+                        help="Compress the hosts file  ignoring non-necessary lines  (empty lines and comments) and "
+                             "putting multiple domains in each line. Improve the performances under Windows.")
+    parser.add_argument("--minimise", "-m", dest="minimise", default=False, action="store_true",
+                        help="Minimise the hosts file ignoring non-necessary lines (empty lines and comments).")
 
     global settings
 
@@ -155,17 +131,15 @@ def main():
     # All our extensions folders...
     settings["extensions"] = [os.path.basename(item) for item in list_dir_no_hidden(extensions_path)]
     # ... intersected with the extensions passed-in as arguments, then sorted.
-    settings["extensions"] = sorted(list(
-        set(options["extensions"]).intersection(settings["extensions"])))
+    settings["extensions"] = sorted(list(set(options["extensions"]).intersection(settings["extensions"])))
 
     auto = settings["auto"]
     exclusion_regexes = settings["exclusionregexs"]
     source_data_filename = settings["sourcedatafilename"]
 
-    update_sources = prompt_for_update(freshen=settings["freshen"],
-                                       update_auto=auto)
+    update_sources = prompt_for_update(freshen=settings["freshen"], update_auto=auto)
     if update_sources:
-        update_all_sources(source_data_filename, settings["hostfilename"])
+        update_all_sources(source_data_filename, str("hosts"))
 
     gather_exclusions = prompt_for_exclusions(skip_prompt=auto)
 
@@ -186,6 +160,7 @@ def main():
 
     merge_file = create_initial_file()
     remove_old_hosts_file(settings["backup"])
+
     if settings["compress"]:
         # Another mode is required to read and write the file in Python 3
         final_file = open(path_join_robust(settings["outputpath"], "hosts"), "w+b" if PY3 else "w+")
@@ -210,11 +185,13 @@ def main():
                          skipstatichosts=skip_static_hosts)
     final_file.close()
 
+    """
     update_readme_data(settings["readmedatafilename"],
                        extensions=extensions,
                        numberofrules=number_of_rules,
                        outputsubfolder=output_subfolder,
                        sourcesdata=sources_data)
+    """
 
     print_success("Success! The hosts file has been saved in folder " +
                   output_subfolder + "\nIt contains " +
@@ -359,7 +336,7 @@ def prompt_for_move(final_file, **move_params):
     elif move_params["auto"] or skip_static_hosts:
         move_file = False
     else:
-        prompt = ("Do you want to replace your existing hosts file with the newly generated file?")
+        prompt = str("Do you want to replace your existing hosts file with the newly generated file?")
         move_file = query_yes_no(prompt)
 
     if move_file:
@@ -616,8 +593,8 @@ def update_all_sources(source_data_filename, host_filename):
                                                host_filename), "wb")
             write_data(hosts_file, str(updated_file))
             hosts_file.close()
-        except Exception:
-            print("Error in updating source: ", update_url)
+        except Exception as err:
+            print("Error in updating source: " + str(err), update_url)
 # End Update Logic
 
 
@@ -1259,16 +1236,20 @@ def write_data(f, data):
         The data to write to the file.
     """
 
-    if len(data) < 2:
+    if len(data) < 5:
         return None
 
-    if PY3:
-        f.write(bytes(data, "UTF-8"))
-    else:
-        try:
-            f.write(str(data))
-        except UnicodeEncodeError:
-            f.write(str(data.encode("UTF-8")))
+    if "." in data:
+
+        # data = "%s IN CNAME rpz-drop." % data
+
+        if PY3:
+            f.write(bytes(data, "UTF-8"))
+        else:
+            try:
+                f.write(str(data))
+            except UnicodeEncodeError:
+                f.write(str(data.encode("UTF-8")))
 
 
 def list_dir_no_hidden(path):
